@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description:
     "Plan, develop, test, review, deploy and demo — all from your Meta glasses. Powered by Claude, Gemini, and OpenAI.",
   icons: {
-    icon: "/logos/AppIcon.png",
+    icon: "/logos/aria_wf_bb_sq.png",
   },
 };
 
