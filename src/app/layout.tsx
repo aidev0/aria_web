@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "aria glasses ai — code from anywhere, ship without a laptop",
+  title: "aria glasses — code from anywhere, ship without a laptop",
   description:
     "Plan, develop, test, review, deploy and demo — all from your Meta glasses. Powered by Claude, Gemini, and OpenAI.",
   icons: {

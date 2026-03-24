@@ -76,7 +76,7 @@ export default function Dashboard() {
               width={28}
               height={28}
             />
-            <h1 className="text-sm font-medium text-zinc-400 tracking-wide">aria glasses ai</h1>
+            <h1 className="text-lg font-medium text-zinc-400 tracking-wide">aria glasses</h1>
           </Link>
         </div>
 
