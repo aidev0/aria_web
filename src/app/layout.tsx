@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aria AI — Development Agents for AR Glasses",
+  title: "aria glasses ai — code from anywhere, ship without a laptop",
   description:
-    "Plan, develop, test, review, deploy and report — all from your Meta glasses. Powered by Claude, Gemini, and OpenAI.",
+    "Plan, develop, test, review, deploy and demo — all from your Meta glasses. Powered by Claude, Gemini, and OpenAI.",
   icons: {
     icon: "/logos/AppIcon.png",
   },
@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950 text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}
       >
         {children}
       </body>

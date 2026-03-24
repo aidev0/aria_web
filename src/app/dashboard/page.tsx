@@ -11,7 +11,7 @@ const AGENT_META: Record<string, { icon: string; color: string }> = {
   tester: { icon: "\u{1F9EA}", color: "from-green-500 to-emerald-600" },
   code_reviewer: { icon: "\u{1F50D}", color: "from-amber-500 to-orange-600" },
   deployer: { icon: "\u{1F680}", color: "from-pink-500 to-rose-600" },
-  reporter: { icon: "\u{1F4CA}", color: "from-teal-500 to-cyan-600" },
+  reporter: { icon: "\u{1F3AC}", color: "from-teal-500 to-cyan-600" },
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -69,15 +69,15 @@ export default function Dashboard() {
       {/* Header */}
       <header className="border-b border-zinc-800 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/">
+          <Link href="/" className="flex items-center gap-3">
             <Image
-              src="/logos/aria_wf_bb_nodot.png"
-              alt="Aria"
-              width={36}
-              height={36}
+              src="/logos/logo.png"
+              alt="aria"
+              width={28}
+              height={28}
             />
+            <h1 className="text-sm font-medium text-zinc-400 tracking-wide">aria glasses ai</h1>
           </Link>
-          <h1 className="text-lg font-semibold">Aria Dashboard</h1>
         </div>
 
         <div className="flex items-center gap-4">

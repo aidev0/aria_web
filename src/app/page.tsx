@@ -3,222 +3,222 @@
 import Image from "next/image";
 import Link from "next/link";
 
-const agents = [
-  {
-    name: "Planner",
-    icon: "\u{1F4CB}",
-    color: "from-violet-500 to-purple-600",
-    description: "Breaks requirements into structured development plans",
-  },
-  {
-    name: "Developer",
-    icon: "\u26A1",
-    color: "from-blue-500 to-cyan-600",
-    description: "Generates production-ready code from task specs",
-  },
-  {
-    name: "Tester",
-    icon: "\u{1F9EA}",
-    color: "from-green-500 to-emerald-600",
-    description: "Creates comprehensive test suites automatically",
-  },
-  {
-    name: "Code Reviewer",
-    icon: "\u{1F50D}",
-    color: "from-amber-500 to-orange-600",
-    description: "Reviews code for quality, security & performance",
-  },
-  {
-    name: "Deployer",
-    icon: "\u{1F680}",
-    color: "from-pink-500 to-rose-600",
-    description: "Handles build pipelines and deployment automation",
-  },
-  {
-    name: "Reporter",
-    icon: "\u{1F4CA}",
-    color: "from-teal-500 to-cyan-600",
-    description: "Delivers reports via WhatsApp, voice & glasses display",
-  },
+const pipeline = [
+  { name: "plan", color: "#8b5cf6" },
+  { name: "develop", color: "#3b82f6" },
+  { name: "test", color: "#10b981" },
+  { name: "review", color: "#f59e0b" },
+  { name: "deploy", color: "#ec4899" },
+  { name: "demo", color: "#06b6d4" },
 ];
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
-      {/* Hero */}
-      <section className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.15),transparent_70%)]" />
+    <main className="min-h-screen bg-black">
+      {/* ── Hero ────────────────────────────────────────────────────────── */}
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
+        {/* Subtle glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/[0.02] rounded-full blur-[100px]" />
 
-        <div className="relative z-10 max-w-4xl mx-auto">
-          <Image
-            src="/logos/aria_wf_bb_nodot.png"
-            alt="Aria"
-            width={180}
-            height={180}
-            className="mx-auto mb-8"
-          />
+        <div className="relative z-10 max-w-3xl mx-auto text-center">
+          {/* Logo — white on black, blends with black bg */}
+          <div className="mb-12">
+            <Image
+              src="/logos/aria_wf_bb.png"
+              alt="aria"
+              width={220}
+              height={220}
+              className="mx-auto rounded-2xl"
+              priority
+            />
+          </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-            <span className="text-gradient">Aria AI</span>
+          {/* Sub-brand */}
+          <p className="text-[13px] text-zinc-400 tracking-[0.3em] mb-8">
+            aria glasses ai
+          </p>
+
+          {/* Headline */}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-[1.15] tracking-tight">
+            code from anywhere.
+            <br />
+            <span className="text-zinc-400">ship without a laptop.</span>
           </h1>
 
-          <p className="text-xl md:text-2xl text-zinc-400 mb-4 max-w-2xl mx-auto">
-            Development agents for your Meta glasses.
-            <br />
-            Plan. Develop. Test. Review. Deploy. Report.
+          <p className="text-zinc-400 text-lg md:text-xl mb-10 max-w-xl mx-auto leading-relaxed">
+            speak your idea to meta glasses. aria ai agents build it
+            while you walk, chill, or commute. demo at your next event.
           </p>
 
-          <p className="text-lg text-zinc-500 mb-10 max-w-xl mx-auto">
-            Pitch an idea on SF streets. Showcase your demo at Luma events.
-            No laptop required.
-          </p>
+          {/* Pipeline */}
+          <div className="flex items-center justify-center gap-3 mb-12 flex-wrap">
+            {pipeline.map((step, i) => (
+              <div key={step.name} className="flex items-center gap-3">
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: step.color }}
+                >
+                  {step.name}
+                </span>
+                {i < pipeline.length - 1 && (
+                  <span className="text-zinc-600">{"/"}</span>
+                )}
+              </div>
+            ))}
+          </div>
 
-          <div className="flex gap-4 justify-center flex-wrap">
+          {/* CTA */}
+          <div className="flex gap-4 justify-center">
             <Link
               href="/dashboard"
-              className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-lg transition-colors"
+              className="px-8 py-3 bg-white text-black rounded-lg font-medium text-sm transition-all hover:bg-zinc-200"
             >
-              Open Dashboard
+              get started
             </Link>
             <a
-              href="#agents"
-              className="px-8 py-3 border border-zinc-700 hover:border-zinc-500 rounded-xl font-semibold text-lg transition-colors text-zinc-300"
+              href="#about"
+              className="px-8 py-3 border border-zinc-700 hover:border-zinc-500 rounded-lg font-medium text-sm text-zinc-300 hover:text-white transition-all"
             >
-              Explore Agents
+              download testflight
             </a>
           </div>
         </div>
 
-        <div className="absolute bottom-8 text-zinc-600 text-sm">
-          Powered by Claude &middot; Gemini &middot; OpenAI &middot; ElevenLabs &middot; Whisper
+        <div className="absolute bottom-8 text-zinc-500 text-[11px] tracking-wider">
+          transcription &middot; voice &middot; planning &middot; development &middot; testing &middot; review &middot; deploy &middot; demo
         </div>
       </section>
 
-      {/* Agents */}
-      <section id="agents" className="py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            Six Agents. One Pipeline.
-          </h2>
-          <p className="text-zinc-400 text-center mb-16 text-lg">
-            From voice command to deployed app — without touching a keyboard.
+      {/* ── About ───────────────────────────────────────────────────────── */}
+      <section id="about" className="py-32 px-6">
+        <div className="max-w-2xl mx-auto">
+          <p className="text-2xl md:text-3xl text-zinc-300 leading-relaxed font-light">
+            we know you{"'"}re addicted to{" "}
+            <span className="text-white font-medium">productivity</span>.
+            we{"'"}re bringing the ability to optimize your lifestyle and{" "}
+            <span className="text-white font-medium">liberate you</span> from
+            sitting behind a computer for hours. let{" "}
+            <span className="text-white font-medium">aria ai agents</span> do
+            the work for you.
           </p>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {agents.map((agent) => (
+          <div className="mt-16 space-y-8 text-zinc-400 text-lg leading-relaxed">
+            <p>
+              talk to aria glasses while you chill at the beach, walk sf streets,
+              commute or watch tv. aria ai agents plan, develop, test, review
+              and deploy. you get a voice memo when it{"'"}s done.
+            </p>
+            <p>
+              download the aria ios app. connect your meta glasses. speak an idea.
+              aria develops apps, runs tests, deploys mvps. showcase your demo
+              at luma events without typing a single letter.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pipeline ────────────────────────────────────────────────────── */}
+      <section className="py-32 px-6 border-t border-zinc-900">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold text-center mb-20 text-zinc-300">
+            voice to production
+          </h2>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-px bg-zinc-900 rounded-2xl overflow-hidden">
+            {pipeline.map((step, i) => (
               <div
-                key={agent.name}
-                className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/50 hover:border-zinc-600 transition-colors group"
+                key={step.name}
+                className="bg-black p-6 text-center hover:bg-zinc-950 transition-colors"
               >
-                <div
-                  className={`w-12 h-12 rounded-xl bg-gradient-to-br ${agent.color} flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform`}
-                >
-                  {agent.icon}
+                <div className="text-[11px] text-zinc-500 font-mono mb-4">
+                  0{i + 1}
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{agent.name}</h3>
-                <p className="text-zinc-400">{agent.description}</p>
+                <div
+                  className="text-lg font-semibold mb-1"
+                  style={{ color: step.color }}
+                >
+                  {step.name}
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="py-24 px-6 border-t border-zinc-800">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-16">
-            How It Works
+      {/* ── Capabilities ────────────────────────────────────────────────── */}
+      <section className="py-32 px-6 border-t border-zinc-900">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold text-center mb-20 text-zinc-300">
+            everything connected
           </h2>
 
-          <div className="grid md:grid-cols-3 gap-10">
-            <div>
-              <div className="text-4xl mb-4">{"\u{1F576}\uFE0F"}</div>
-              <h3 className="text-lg font-semibold mb-2">Speak to Glasses</h3>
-              <p className="text-zinc-400">
-                Tell Aria what to build through your Meta glasses mic. Whisper transcribes your voice in real-time.
-              </p>
-            </div>
-            <div>
-              <div className="text-4xl mb-4">{"\u{1F916}"}</div>
-              <h3 className="text-lg font-semibold mb-2">Agents Work</h3>
-              <p className="text-zinc-400">
-                Six AI agents plan, code, test, review, and deploy your idea automatically using Claude, Gemini, or GPT.
-              </p>
-            </div>
-            <div>
-              <div className="text-4xl mb-4">{"\u{1F4F1}"}</div>
-              <h3 className="text-lg font-semibold mb-2">Get Reports</h3>
-              <p className="text-zinc-400">
-                Receive voice whispers on glasses, visual notifications on display, and WhatsApp messages with status updates.
-              </p>
-            </div>
+          <div className="grid md:grid-cols-2 gap-x-16 gap-y-10">
+            {[
+              ["meta glasses", "camera, mic, speaker, display. full ar integration with any meta glasses."],
+              ["transcription agent", "aria listens through your glasses mic and transcribes in real-time."],
+              ["dev agents", "six ai agents with configurable models and cli tools. your pick per agent."],
+              ["ios app", "connect glasses, stream video, control agents from your phone."],
+              ["voice agent", "aria whispers results directly into your ear through glasses speaker."],
+              ["notification agent", "pipeline status delivered via whatsapp and glasses display."],
+            ].map(([title, desc]) => (
+              <div key={title}>
+                <h3 className="text-white font-medium mb-1">{title}</h3>
+                <p className="text-zinc-400 text-sm leading-relaxed">{desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-24 px-6 border-t border-zinc-800">
-        <div className="max-w-lg mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Simple Pricing
-          </h2>
-          <p className="text-zinc-400 mb-12">
-            Everything you need. One plan. No surprises.
+      {/* ── Pricing ─────────────────────────────────────────────────────── */}
+      <section className="py-32 px-6 border-t border-zinc-900">
+        <div className="max-w-sm mx-auto text-center">
+          <p className="text-zinc-400 text-sm mb-3 tracking-wider">one plan</p>
+          <div className="flex items-baseline justify-center gap-1 mb-3">
+            <span className="text-5xl font-bold text-white">$199</span>
+            <span className="text-zinc-400">/mo</span>
+          </div>
+          <p className="text-zinc-400 text-sm mb-8">
+            all aria agents. all models. all clis. unlimited.
           </p>
 
-          <div className="rounded-2xl border border-indigo-500/50 bg-zinc-900/50 p-8 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent" />
-            <div className="relative">
-              <div className="text-sm text-indigo-400 font-semibold mb-2 uppercase tracking-wider">
-                Aria Pro
-              </div>
-              <div className="flex items-baseline justify-center gap-1 mb-2">
-                <span className="text-5xl font-bold">$199</span>
-                <span className="text-zinc-400">/mo</span>
-              </div>
-              <p className="text-zinc-400 text-sm mb-8">
-                Full pipeline access with all 6 agents, unlimited runs, and Meta glasses integration.
-              </p>
+          <p className="text-zinc-300 text-sm leading-loose mb-8">
+            meta glasses integration &middot; aria ios app &middot; software developer agents &middot; transcription &middot; voice reports &middot; whatsapp notifications &middot; configurable models + cli
+          </p>
 
-              <ul className="text-left text-sm space-y-3 mb-8">
-                {[
-                  "6 AI development agents (plan, develop, test, review, deploy, report)",
-                  "Choose Claude Opus 4.6, Gemini 3.1 Pro, or GPT-5.4 per agent",
-                  "CLI integration (Claude Code, Gemini CLI, Codex CLI)",
-                  "Meta glasses live video & audio streaming",
-                  "OpenAI Whisper speech-to-text",
-                  "ElevenLabs voice memos to glasses speaker",
-                  "WhatsApp pipeline reports",
-                  "MongoDB persistent history",
-                ].map((feature) => (
-                  <li key={feature} className="flex items-start gap-2">
-                    <span className="text-indigo-400 mt-0.5">{"\u2713"}</span>
-                    <span className="text-zinc-300">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href="/dashboard"
-                className="block w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-center transition-colors"
+          <div className="flex flex-wrap justify-center gap-2 mb-10">
+            {[
+              { label: "Claude Opus 4.6", color: "#f97316" },
+              { label: "Gemini 3.1 Pro", color: "#3b82f6" },
+              { label: "GPT-5.4", color: "#10b981" },
+              { label: "Claude Code CLI", color: "#a78bfa" },
+              { label: "Gemini CLI", color: "#60a5fa" },
+              { label: "Codex CLI", color: "#34d399" },
+            ].map((m) => (
+              <span
+                key={m.label}
+                className="text-xs px-3 py-1 rounded-full border"
+                style={{ color: m.color, borderColor: m.color + "30" }}
               >
-                Get Started
-              </Link>
-            </div>
+                {m.label}
+              </span>
+            ))}
           </div>
+
+          <Link
+            href="/dashboard"
+            className="inline-block px-10 py-3 bg-white text-black rounded-lg font-medium text-sm transition-all hover:bg-zinc-200"
+          >
+            get started
+          </Link>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 px-6 border-t border-zinc-800 text-center text-zinc-500 text-sm">
-        <Image
-          src="/logos/aria_yin_yang.png"
-          alt="Aria"
-          width={32}
-          height={32}
-          className="mx-auto mb-3 opacity-50"
-        />
-        Aria AI &copy; {new Date().getFullYear()} &mdash; Redefining software development with AR
+      {/* ── Footer ──────────────────────────────────────────────────────── */}
+      <footer className="py-10 px-6 border-t border-zinc-900 text-center">
+        <p className="text-zinc-500 text-xs tracking-wider">
+          aria glasses ai &copy; {new Date().getFullYear()}
+        </p>
       </footer>
     </main>
   );
