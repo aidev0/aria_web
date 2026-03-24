@@ -22,7 +22,7 @@ export default function Home() {
 
         <div className="relative z-10 max-w-3xl mx-auto text-center">
           {/* Logo — white on black, blends with black bg */}
-          <div className="mb-12">
+          <div className="mb-4">
             <Image
               src="/logos/aria_wf_bb.png"
               alt="aria"
@@ -35,15 +35,8 @@ export default function Home() {
 
           {/* Sub-brand */}
           <p className="text-lg text-zinc-400 tracking-[0.3em] mb-8">
-            aria glasses
+            aria glasses development suite
           </p>
-
-          {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-[1.15] tracking-tight">
-            code from anywhere.
-            <br />
-            <span className="text-zinc-400">ship without a laptop.</span>
-          </h1>
 
           <p className="text-zinc-400 text-lg md:text-xl mb-10 max-w-xl mx-auto leading-relaxed">
             speak your idea to meta glasses. aria ai agents build it
@@ -83,14 +76,10 @@ export default function Home() {
             </a>
           </div>
         </div>
-
-        <div className="absolute bottom-8 text-zinc-500 text-[11px] tracking-wider">
-          transcription &middot; voice &middot; planning &middot; development &middot; testing &middot; review &middot; deploy &middot; demo
-        </div>
       </section>
 
       {/* ── About ───────────────────────────────────────────────────────── */}
-      <section id="about" className="py-32 px-6">
+      <section id="about" className="py-12 px-6">
         <div className="max-w-2xl mx-auto">
           <p className="text-2xl md:text-3xl text-zinc-300 leading-relaxed font-light">
             we know you{"'"}re addicted to{" "}
@@ -118,7 +107,7 @@ export default function Home() {
       </section>
 
       {/* ── Capabilities ────────────────────────────────────────────────── */}
-      <section className="py-32 px-6 border-t border-zinc-900">
+      <section className="py-12 px-6">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-20 text-zinc-300">
             everything connected
@@ -143,7 +132,7 @@ export default function Home() {
       </section>
 
       {/* ── Coding Agents ──────────────────────────────────────────────── */}
-      <section className="py-32 px-6 border-t border-zinc-900">
+      <section className="py-12 px-6">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-6 text-zinc-300">
             coding agents
@@ -202,13 +191,13 @@ export default function Home() {
       </section>
 
       {/* ── Pricing ─────────────────────────────────────────────────────── */}
-      <section className="py-32 px-6 border-t border-zinc-900">
+      <section className="py-12 px-6">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-16 text-zinc-300">
             pricing
           </h2>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {/* Pro */}
             <div className="rounded-2xl border border-zinc-800 p-8 text-center flex flex-col">
               <p className="text-zinc-400 text-sm mb-4 tracking-wider">pro</p>
@@ -217,9 +206,16 @@ export default function Home() {
                 <span className="text-zinc-400">/mo/seat</span>
               </div>
               <p className="text-zinc-500 text-xs mb-6">$99 llm usage included</p>
-              <p className="text-zinc-400 text-sm leading-relaxed mb-8">
-                all aria agents &middot; all models &middot; all clis &middot; meta glasses integration &middot; ios app &middot; transcription &middot; voice reports
-              </p>
+              <ul className="text-zinc-400 text-sm text-left space-y-2 mb-8">
+                <li>all aria agents</li>
+                <li>all models</li>
+                <li>all clis</li>
+                <li>meta glasses integration</li>
+                <li>ios app</li>
+                <li>transcription</li>
+                <li>voice reports</li>
+                <li>team collaboration</li>
+              </ul>
               <Link
                 href="/dashboard"
                 className="mt-auto px-8 py-3 bg-white text-black rounded-lg font-medium text-sm transition-all hover:bg-zinc-200 self-center"
@@ -235,19 +231,49 @@ export default function Home() {
               </div>
               <p className="text-zinc-400 text-sm mb-4 tracking-wider">elite</p>
               <div className="flex items-baseline justify-center gap-1 mb-2">
-                <span className="text-4xl font-bold text-white">$299</span>
+                <span className="text-4xl font-bold text-white">$399</span>
                 <span className="text-zinc-400">/mo/seat</span>
               </div>
               <p className="text-zinc-500 text-xs mb-6">unlimited usage &middot; priority</p>
-              <p className="text-zinc-400 text-sm leading-relaxed mb-8">
-                everything in pro &middot; unlimited pipeline runs &middot; priority agent execution &middot; slack notifications &middot; dedicated support
-              </p>
+              <ul className="text-zinc-400 text-sm text-left space-y-2 mb-8">
+                <li>everything in pro</li>
+                <li>unlimited pipeline runs</li>
+                <li>priority agent execution</li>
+                <li>slack notifications</li>
+                <li>dedicated support</li>
+                <li>team collaboration</li>
+              </ul>
               <Link
                 href="/dashboard"
                 className="mt-auto px-8 py-3 bg-white text-black rounded-lg font-medium text-sm transition-all hover:bg-zinc-200 self-center"
               >
                 get started
               </Link>
+            </div>
+
+            {/* Enterprise */}
+            <div className="rounded-2xl border border-zinc-800 p-8 text-center flex flex-col">
+              <p className="text-zinc-400 text-sm mb-4 tracking-wider">enterprise</p>
+              <div className="flex items-baseline justify-center gap-1 mb-2">
+                <span className="text-4xl font-bold text-white">custom</span>
+              </div>
+              <p className="text-zinc-500 text-xs mb-6">tailored to your org</p>
+              <ul className="text-zinc-400 text-sm text-left space-y-2 mb-8">
+                <li>everything in elite</li>
+                <li>custom integrations</li>
+                <li>sso</li>
+                <li>on-prem deployment</li>
+                <li>sla</li>
+                <li>dedicated account manager</li>
+                <li>security / privacy compliance</li>
+                <li>team collaboration</li>
+              </ul>
+              <a
+                href="mailto:yrafati@gmail.com"
+                className="mt-auto px-8 py-3 bg-white text-black rounded-lg font-medium text-sm transition-all hover:bg-zinc-200 self-center"
+              >
+                contact us
+              </a>
             </div>
           </div>
         </div>
