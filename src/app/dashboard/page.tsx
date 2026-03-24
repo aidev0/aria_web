@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useWebSocket, useAgents } from "@/lib/hooks";
+import { useWebSocket, useAgents, type AgentConfigData } from "@/lib/hooks";
 
 const AGENT_META: Record<string, { icon: string; color: string }> = {
   planner: { icon: "\u{1F4CB}", color: "from-violet-500 to-purple-600" },
@@ -22,9 +22,16 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const MODEL_OPTIONS = [
-  { value: "claude", label: "Claude" },
-  { value: "gemini", label: "Gemini" },
-  { value: "openai", label: "GPT-4o" },
+  { value: "claude", label: "Claude Opus 4.6" },
+  { value: "gemini", label: "Gemini 3.1 Pro" },
+  { value: "openai", label: "GPT-5.4" },
+];
+
+const CLI_OPTIONS = [
+  { value: "none", label: "API Only" },
+  { value: "claude", label: "Claude Code CLI" },
+  { value: "gemini", label: "Gemini CLI" },
+  { value: "codex", label: "Codex CLI" },
 ];
 
 export default function Dashboard() {
@@ -33,19 +40,29 @@ export default function Dashboard() {
     agents,
     pipelineRunning,
     pipelineResult,
+    configureAgent,
     runPipeline,
   } = useAgents();
 
   const [requirement, setRequirement] = useState("");
   const [model, setModel] = useState("claude");
-  const [activeTab, setActiveTab] = useState<"pipeline" | "stream" | "agents">(
-    "pipeline"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "pipeline" | "stream" | "agents"
+  >("pipeline");
+  const [editingAgent, setEditingAgent] = useState<string | null>(null);
 
   const handleRunPipeline = useCallback(async () => {
     if (!requirement.trim()) return;
     await runPipeline(requirement, { model });
   }, [requirement, model, runPipeline]);
+
+  const handleSaveConfig = useCallback(
+    async (agentType: string, config: AgentConfigData) => {
+      await configureAgent(agentType, config);
+      setEditingAgent(null);
+    },
+    [configureAgent]
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -64,7 +81,6 @@ export default function Dashboard() {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* WebSocket status */}
           <div className="flex items-center gap-2">
             <div
               className={`w-2 h-2 rounded-full ${
@@ -104,7 +120,8 @@ export default function Dashboard() {
               return (
                 <div
                   key={agent.agent_type}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-900 transition-colors"
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-900 transition-colors cursor-pointer"
+                  onClick={() => setActiveTab("agents")}
                 >
                   <div
                     className={`w-8 h-8 rounded-lg bg-gradient-to-br ${meta.color} flex items-center justify-center text-sm`}
@@ -122,7 +139,8 @@ export default function Dashboard() {
                         }`}
                       />
                       <span className="text-xs text-zinc-500">
-                        {agent.status}
+                        {agent.config?.model || "claude"}
+                        {agent.config?.use_cli ? ` + ${agent.config.cli}` : ""}
                       </span>
                     </div>
                   </div>
@@ -131,7 +149,6 @@ export default function Dashboard() {
             })}
           </div>
 
-          {/* Stream controls when connected */}
           {ws.status === "connected" && (
             <div className="mt-6">
               <h2 className="text-xs text-zinc-500 uppercase tracking-wider mb-3 font-semibold">
@@ -183,12 +200,10 @@ export default function Dashboard() {
             <div>
               <h2 className="text-2xl font-bold mb-2">Run Pipeline</h2>
               <p className="text-zinc-400 mb-6">
-                Describe what you want to build. Aria agents will plan, develop,
-                test, review, deploy, and report.
+                Describe what you want to build. Each agent uses its configured model & CLI.
               </p>
 
               <div className="max-w-3xl">
-                {/* Input area */}
                 <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4 mb-4">
                   <textarea
                     value={requirement}
@@ -199,7 +214,7 @@ export default function Dashboard() {
                   />
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-zinc-500">Model:</span>
+                      <span className="text-xs text-zinc-500">Override all:</span>
                       {MODEL_OPTIONS.map((opt) => (
                         <button
                           key={opt.value}
@@ -231,59 +246,44 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Pipeline stages */}
                 {pipelineRunning && (
                   <div className="space-y-2">
-                    {[
-                      "Planning",
-                      "Developing",
-                      "Testing",
-                      "Reviewing",
-                      "Deploying",
-                      "Reporting",
-                    ].map((stage, i) => {
-                      const agentKeys = [
-                        "planner",
-                        "developer",
-                        "tester",
-                        "code_reviewer",
-                        "deployer",
-                        "reporter",
-                      ];
-                      const agent = agents.find(
-                        (a) => a.agent_type === agentKeys[i]
-                      );
-                      const meta = AGENT_META[agentKeys[i]];
-                      return (
-                        <div
-                          key={stage}
-                          className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/50 border border-zinc-800"
-                        >
+                    {["Planning", "Developing", "Testing", "Reviewing", "Deploying", "Reporting"].map(
+                      (stage, i) => {
+                        const agentKeys = [
+                          "planner", "developer", "tester", "code_reviewer", "deployer", "reporter",
+                        ];
+                        const agent = agents.find((a) => a.agent_type === agentKeys[i]);
+                        const meta = AGENT_META[agentKeys[i]];
+                        return (
                           <div
-                            className={`w-8 h-8 rounded-lg bg-gradient-to-br ${meta.color} flex items-center justify-center text-sm`}
+                            key={stage}
+                            className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/50 border border-zinc-800"
                           >
-                            {meta.icon}
+                            <div
+                              className={`w-8 h-8 rounded-lg bg-gradient-to-br ${meta.color} flex items-center justify-center text-sm`}
+                            >
+                              {meta.icon}
+                            </div>
+                            <span className="text-sm font-medium flex-1">{stage}</span>
+                            <span className="text-xs text-zinc-500">
+                              {agent?.config?.model || "claude"}
+                            </span>
+                            <div
+                              className={`w-2 h-2 rounded-full ${
+                                STATUS_COLORS[agent?.status || "idle"]
+                              }`}
+                            />
                           </div>
-                          <span className="text-sm font-medium flex-1">
-                            {stage}
-                          </span>
-                          <div
-                            className={`w-2 h-2 rounded-full ${
-                              STATUS_COLORS[agent?.status || "idle"]
-                            }`}
-                          />
-                        </div>
-                      );
-                    })}
+                        );
+                      }
+                    )}
                   </div>
                 )}
 
-                {/* Pipeline Result */}
                 {pipelineResult && (
                   <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6">
-                    <h3 className="text-lg font-semibold mb-3">
-                      Pipeline Complete
-                    </h3>
+                    <h3 className="text-lg font-semibold mb-3">Pipeline Complete</h3>
                     <pre className="text-xs text-zinc-400 overflow-auto max-h-96 bg-zinc-950 rounded-xl p-4">
                       {JSON.stringify(pipelineResult, null, 2)}
                     </pre>
@@ -302,14 +302,11 @@ export default function Dashboard() {
               </p>
 
               <div className="grid lg:grid-cols-3 gap-6">
-                {/* Video feed */}
                 <div className="lg:col-span-2">
                   <div className="aspect-video bg-zinc-900 rounded-2xl border border-zinc-800 flex items-center justify-center overflow-hidden">
                     {ws.status !== "connected" ? (
                       <div className="text-center">
-                        <p className="text-zinc-600 mb-3">
-                          Connect to glasses to view stream
-                        </p>
+                        <p className="text-zinc-600 mb-3">Connect to glasses to view stream</p>
                         <button
                           onClick={ws.connect}
                           className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition-colors"
@@ -329,35 +326,24 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Transcripts + AI Responses */}
                 <div className="space-y-4">
                   <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4 max-h-[300px] overflow-auto">
-                    <h3 className="text-sm font-semibold text-zinc-400 mb-3">
-                      Transcriptions
-                    </h3>
+                    <h3 className="text-sm font-semibold text-zinc-400 mb-3">Transcriptions</h3>
                     {ws.transcripts.length === 0 ? (
-                      <p className="text-xs text-zinc-600">
-                        Speak through glasses mic...
-                      </p>
+                      <p className="text-xs text-zinc-600">Speak through glasses mic...</p>
                     ) : (
                       <div className="space-y-2">
                         {ws.transcripts.map((t, i) => (
-                          <p key={i} className="text-sm">
-                            {t.text}
-                          </p>
+                          <p key={i} className="text-sm">{t.text}</p>
                         ))}
                       </div>
                     )}
                   </div>
 
                   <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4 max-h-[300px] overflow-auto">
-                    <h3 className="text-sm font-semibold text-zinc-400 mb-3">
-                      AI Responses
-                    </h3>
+                    <h3 className="text-sm font-semibold text-zinc-400 mb-3">AI Responses</h3>
                     {ws.aiResponses.length === 0 ? (
-                      <p className="text-xs text-zinc-600">
-                        AI responses will appear here...
-                      </p>
+                      <p className="text-xs text-zinc-600">AI responses will appear here...</p>
                     ) : (
                       <div className="space-y-2">
                         {ws.aiResponses.map((r, i) => (
@@ -376,12 +362,12 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Agents Tab */}
+          {/* Agents Tab — per-agent model/CLI config */}
           {activeTab === "agents" && (
             <div>
-              <h2 className="text-2xl font-bold mb-2">Agent Status</h2>
+              <h2 className="text-2xl font-bold mb-2">Agent Configuration</h2>
               <p className="text-zinc-400 mb-6">
-                View detailed status and results for each agent.
+                Choose the LLM model and CLI for each agent. Configs are saved to MongoDB.
               </p>
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -390,6 +376,8 @@ export default function Dashboard() {
                     icon: "\u{1F916}",
                     color: "from-zinc-500 to-zinc-600",
                   };
+                  const isEditing = editingAgent === agent.agent_type;
+
                   return (
                     <div
                       key={agent.agent_type}
@@ -401,25 +389,63 @@ export default function Dashboard() {
                         >
                           {meta.icon}
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <h3 className="font-semibold">{agent.name}</h3>
                           <div className="flex items-center gap-1.5">
                             <div
-                              className={`w-2 h-2 rounded-full ${
-                                STATUS_COLORS[agent.status]
-                              }`}
+                              className={`w-2 h-2 rounded-full ${STATUS_COLORS[agent.status]}`}
                             />
                             <span className="text-xs text-zinc-400 capitalize">
                               {agent.status}
                             </span>
                           </div>
                         </div>
+                        <button
+                          onClick={() =>
+                            setEditingAgent(isEditing ? null : agent.agent_type)
+                          }
+                          className="text-xs px-2 py-1 rounded-lg border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-white transition-colors"
+                        >
+                          {isEditing ? "Cancel" : "Configure"}
+                        </button>
                       </div>
 
-                      {agent.current_task && (
-                        <pre className="text-xs text-zinc-500 bg-zinc-950 rounded-lg p-3 overflow-auto max-h-40">
-                          {JSON.stringify(agent.current_task, null, 2)}
-                        </pre>
+                      {/* Current config display */}
+                      {!isEditing && (
+                        <div className="space-y-1.5 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Model</span>
+                            <span className="text-zinc-300">
+                              {MODEL_OPTIONS.find(
+                                (m) => m.value === agent.config?.model
+                              )?.label || agent.config?.model || "Claude Opus 4.6"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">CLI</span>
+                            <span className="text-zinc-300">
+                              {CLI_OPTIONS.find(
+                                (c) => c.value === agent.config?.cli
+                              )?.label || "API Only"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-zinc-500">Use CLI</span>
+                            <span className="text-zinc-300">
+                              {agent.config?.use_cli ? "Yes" : "No"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Edit config form */}
+                      {isEditing && (
+                        <AgentConfigForm
+                          config={agent.config || { model: "claude", cli: "none", use_cli: false }}
+                          onSave={(config) =>
+                            handleSaveConfig(agent.agent_type, config)
+                          }
+                        />
                       )}
                     </div>
                   );
@@ -429,6 +455,94 @@ export default function Dashboard() {
           )}
         </main>
       </div>
+    </div>
+  );
+}
+
+function AgentConfigForm({
+  config,
+  onSave,
+}: {
+  config: AgentConfigData;
+  onSave: (config: AgentConfigData) => void;
+}) {
+  const [localConfig, setLocalConfig] = useState<AgentConfigData>(config);
+
+  return (
+    <div className="space-y-3">
+      {/* Model selection */}
+      <div>
+        <label className="text-xs text-zinc-500 block mb-1">LLM Model</label>
+        <div className="flex flex-wrap gap-1.5">
+          {MODEL_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() =>
+                setLocalConfig((c) => ({ ...c, model: opt.value }))
+              }
+              className={`text-xs px-2.5 py-1 rounded-lg transition-colors ${
+                localConfig.model === opt.value
+                  ? "bg-indigo-600 text-white"
+                  : "bg-zinc-800 text-zinc-400 hover:text-white"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* CLI selection */}
+      <div>
+        <label className="text-xs text-zinc-500 block mb-1">CLI Tool</label>
+        <div className="flex flex-wrap gap-1.5">
+          {CLI_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() =>
+                setLocalConfig((c) => ({
+                  ...c,
+                  cli: opt.value,
+                  use_cli: opt.value !== "none",
+                }))
+              }
+              className={`text-xs px-2.5 py-1 rounded-lg transition-colors ${
+                localConfig.cli === opt.value
+                  ? "bg-indigo-600 text-white"
+                  : "bg-zinc-800 text-zinc-400 hover:text-white"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Use CLI toggle */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-zinc-500">Use CLI instead of API</span>
+        <button
+          onClick={() =>
+            setLocalConfig((c) => ({ ...c, use_cli: !c.use_cli }))
+          }
+          className={`w-10 h-5 rounded-full transition-colors relative ${
+            localConfig.use_cli ? "bg-indigo-600" : "bg-zinc-700"
+          }`}
+        >
+          <div
+            className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-transform ${
+              localConfig.use_cli ? "translate-x-5" : "translate-x-0.5"
+            }`}
+          />
+        </button>
+      </div>
+
+      <button
+        onClick={() => onSave(localConfig)}
+        className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition-colors"
+      >
+        Save Configuration
+      </button>
     </div>
   );
 }

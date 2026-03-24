@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8888";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8888";
 
 // ── WebSocket Hook ───────────────────────────────────────────────────────────
 
@@ -84,14 +84,23 @@ export function useWebSocket() {
   };
 }
 
-// ── Agents API Hook ──────────────────────────────────────────────────────────
+// ── Agent Config Types ───────────────────────────────────────────────────────
+
+export interface AgentConfigData {
+  model: string;  // claude | gemini | openai
+  cli: string;    // claude | gemini | codex | none
+  use_cli: boolean;
+}
 
 export interface AgentStatus {
   agent_type: string;
   name: string;
   status: string;
+  config: AgentConfigData;
   current_task: Record<string, unknown> | null;
 }
+
+// ── Agents API Hook ──────────────────────────────────────────────────────────
 
 export function useAgents() {
   const [agents, setAgents] = useState<AgentStatus[]>([]);
@@ -112,8 +121,26 @@ export function useAgents() {
     }
   }, []);
 
+  const configureAgent = useCallback(
+    async (agentType: string, config: AgentConfigData) => {
+      try {
+        const res = await fetch(`${API_URL}/agents/${agentType}/config`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(config),
+        });
+        const data = await res.json();
+        await fetchAgents();
+        return data;
+      } catch {
+        // server not available
+      }
+    },
+    [fetchAgents]
+  );
+
   const runAgent = useCallback(
-    async (agentType: string, taskInput: Record<string, unknown>, model = "claude") => {
+    async (agentType: string, taskInput: Record<string, unknown>, model?: string) => {
       setLoading(true);
       try {
         const res = await fetch(`${API_URL}/agents/${agentType}/run`, {
@@ -167,6 +194,7 @@ export function useAgents() {
     pipelineRunning,
     pipelineResult,
     fetchAgents,
+    configureAgent,
     runAgent,
     runPipeline,
   };

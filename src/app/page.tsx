@@ -156,6 +156,59 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <section id="pricing" className="py-24 px-6 border-t border-zinc-800">
+        <div className="max-w-lg mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Simple Pricing
+          </h2>
+          <p className="text-zinc-400 mb-12">
+            Everything you need. One plan. No surprises.
+          </p>
+
+          <div className="rounded-2xl border border-indigo-500/50 bg-zinc-900/50 p-8 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent" />
+            <div className="relative">
+              <div className="text-sm text-indigo-400 font-semibold mb-2 uppercase tracking-wider">
+                Aria Pro
+              </div>
+              <div className="flex items-baseline justify-center gap-1 mb-2">
+                <span className="text-5xl font-bold">$199</span>
+                <span className="text-zinc-400">/mo</span>
+              </div>
+              <p className="text-zinc-400 text-sm mb-8">
+                Full pipeline access with all 6 agents, unlimited runs, and Meta glasses integration.
+              </p>
+
+              <ul className="text-left text-sm space-y-3 mb-8">
+                {[
+                  "6 AI development agents (plan, develop, test, review, deploy, report)",
+                  "Choose Claude Opus 4.6, Gemini 3.1 Pro, or GPT-5.4 per agent",
+                  "CLI integration (Claude Code, Gemini CLI, Codex CLI)",
+                  "Meta glasses live video & audio streaming",
+                  "OpenAI Whisper speech-to-text",
+                  "ElevenLabs voice memos to glasses speaker",
+                  "WhatsApp pipeline reports",
+                  "MongoDB persistent history",
+                ].map((feature) => (
+                  <li key={feature} className="flex items-start gap-2">
+                    <span className="text-indigo-400 mt-0.5">{"\u2713"}</span>
+                    <span className="text-zinc-300">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href="/dashboard"
+                className="block w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-center transition-colors"
+              >
+                Get Started
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-zinc-800 text-center text-zinc-500 text-sm">
         <Image
