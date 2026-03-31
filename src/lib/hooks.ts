@@ -21,6 +21,7 @@ export function useWebSocket() {
   const [aiResponses, setAiResponses] = useState<
     { text: string; timestamp: number }[]
   >([]);
+  const [glassesConnected, setGlassesConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
   const connect = useCallback(() => {
@@ -47,6 +48,8 @@ export function useWebSocket() {
             ...prev.slice(-49),
             { text: msg.text as string, timestamp: Date.now() },
           ]);
+        } else if (msg.type === "glasses_status") {
+          setGlassesConnected(msg.connected as boolean);
         }
       } catch {
         // ignore
@@ -78,6 +81,7 @@ export function useWebSocket() {
     lastMessage,
     transcripts,
     aiResponses,
+    glassesConnected,
     connect,
     disconnect,
     send,

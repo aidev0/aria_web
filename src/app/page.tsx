@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useAuth } from "@workos-inc/authkit-nextjs/components";
 
 const pipeline = [
   { name: "plan", color: "#8b5cf6" },
@@ -13,6 +14,8 @@ const pipeline = [
 ];
 
 export default function Home() {
+  const { user } = useAuth();
+
   return (
     <main className="min-h-screen bg-black">
       {/* ── Hero ────────────────────────────────────────────────────────── */}
@@ -35,7 +38,7 @@ export default function Home() {
 
           {/* Sub-brand */}
           <p className="text-lg text-zinc-400 tracking-[0.3em] mb-8">
-            aria glasses development suite
+            development experience for meta glasses
           </p>
 
           <p className="text-zinc-400 text-lg md:text-xl mb-10 max-w-xl mx-auto leading-relaxed">
@@ -62,12 +65,21 @@ export default function Home() {
 
           {/* CTA */}
           <div className="flex gap-4 justify-center">
-            <Link
-              href="/dashboard"
-              className="px-8 py-3 bg-white text-black rounded-lg font-medium text-sm transition-all hover:bg-zinc-200"
-            >
-              get started
-            </Link>
+            {user ? (
+              <Link
+                href="/dashboard"
+                className="px-8 py-3 bg-white text-black rounded-lg font-medium text-sm transition-all hover:bg-zinc-200"
+              >
+                go to dashboard
+              </Link>
+            ) : (
+              <a
+                href="/dashboard"
+                className="px-8 py-3 bg-white text-black rounded-lg font-medium text-sm transition-all hover:bg-zinc-200"
+              >
+                sign in
+              </a>
+            )}
             <a
               href="#about"
               className="px-8 py-3 border border-zinc-700 hover:border-zinc-500 rounded-lg font-medium text-sm text-zinc-300 hover:text-white transition-all"

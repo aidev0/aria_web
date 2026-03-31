@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import { useWebSocket, useAgents, type AgentConfigData } from "@/lib/hooks";
 
 const AGENT_META: Record<string, { icon: string; color: string }> = {
@@ -12,6 +13,15 @@ const AGENT_META: Record<string, { icon: string; color: string }> = {
   code_reviewer: { icon: "\u{1F50D}", color: "from-amber-500 to-orange-600" },
   deployer: { icon: "\u{1F680}", color: "from-pink-500 to-rose-600" },
   reporter: { icon: "\u{1F3AC}", color: "from-teal-500 to-cyan-600" },
+};
+
+const AGENT_DEFAULTS: Record<string, AgentConfigData> = {
+  planner:       { model: "", cli: "claude", use_cli: true },
+  developer:     { model: "", cli: "claude", use_cli: true },
+  tester:        { model: "", cli: "gemini", use_cli: true },
+  code_reviewer: { model: "", cli: "codex",  use_cli: true },
+  deployer:      { model: "", cli: "claude", use_cli: true },
+  reporter:      { model: "claude", cli: "none", use_cli: false },
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -29,12 +39,13 @@ const MODEL_OPTIONS = [
 
 const CLI_OPTIONS = [
   { value: "none", label: "API Only" },
-  { value: "claude", label: "Claude Code CLI" },
+  { value: "claude", label: "Claude Code" },
   { value: "gemini", label: "Gemini CLI" },
   { value: "codex", label: "Codex CLI" },
 ];
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const ws = useWebSocket();
   const {
     agents,
@@ -47,9 +58,30 @@ export default function Dashboard() {
   const [requirement, setRequirement] = useState("");
   const [model, setModel] = useState("claude");
   const [activeTab, setActiveTab] = useState<
-    "pipeline" | "stream" | "agents"
-  >("pipeline");
+    "pipeline" | "stream" | "agents" | "transcripts"
+  >("stream");
   const [editingAgent, setEditingAgent] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<Record<string, unknown>[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+
+  // Auto-connect to server
+  useEffect(() => {
+    ws.connect();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fetchSessions = useCallback(async () => {
+    setLoadingSessions(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8888";
+      const res = await fetch(`${API_URL}/voice/sessions?limit=100`);
+      const data = await res.json();
+      setSessions(data.sessions || []);
+    } catch {
+      // server not available
+    } finally {
+      setLoadingSessions(false);
+    }
+  }, []);
 
   const handleRunPipeline = useCallback(async () => {
     if (!requirement.trim()) return;
@@ -82,26 +114,25 @@ export default function Dashboard() {
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                ws.status === "connected"
-                  ? "bg-green-500"
-                  : ws.status === "connecting"
-                  ? "bg-yellow-500 animate-pulse"
-                  : "bg-zinc-600"
-              }`}
-            />
+            <div className={`w-2 h-2 rounded-full ${ws.glassesConnected ? "bg-green-500" : "bg-zinc-600"}`} />
             <span className="text-xs text-zinc-400">
-              {ws.status === "connected" ? "Live" : "Offline"}
+              {ws.glassesConnected ? "Glasses connected" : "Glasses offline"}
             </span>
           </div>
 
-          <button
-            onClick={ws.status === "connected" ? ws.disconnect : ws.connect}
-            className="text-xs px-3 py-1 rounded-lg border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-white transition-colors"
-          >
-            {ws.status === "connected" ? "Disconnect" : "Connect Glasses"}
-          </button>
+          {user && (
+            <div className="flex items-center gap-3 ml-2 pl-3 border-l border-zinc-700">
+              <span className="text-xs text-zinc-400">
+                {user.firstName || user.email}
+              </span>
+              <a
+                href="/auth/signout"
+                className="text-xs px-3 py-1 rounded-lg border border-zinc-700 hover:border-red-500/50 text-zinc-400 hover:text-red-400 transition-colors"
+              >
+                Sign out
+              </a>
+            </div>
+          )}
         </div>
       </header>
 
@@ -139,8 +170,9 @@ export default function Dashboard() {
                         }`}
                       />
                       <span className="text-xs text-zinc-500">
-                        {agent.config?.model || "claude"}
-                        {agent.config?.use_cli ? ` + ${agent.config.cli}` : ""}
+                        {agent.config?.use_cli
+                          ? CLI_OPTIONS.find((c) => c.value === agent.config?.cli)?.label || "CLI"
+                          : MODEL_OPTIONS.find((m) => m.value === agent.config?.model)?.label || "Claude Opus 4.6"}
                       </span>
                     </div>
                   </div>
@@ -152,25 +184,11 @@ export default function Dashboard() {
           {ws.status === "connected" && (
             <div className="mt-6">
               <h2 className="text-xs text-zinc-500 uppercase tracking-wider mb-3 font-semibold">
-                Glasses
+                Server
               </h2>
-              <div className="space-y-2">
-                <button
-                  onClick={() =>
-                    ws.send({ type: "command", action: "session_start" })
-                  }
-                  className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-zinc-900 text-zinc-300 transition-colors"
-                >
-                  Start Session
-                </button>
-                <button
-                  onClick={() =>
-                    ws.send({ type: "command", action: "video_start" })
-                  }
-                  className="w-full text-left text-sm px-3 py-2 rounded-lg hover:bg-zinc-900 text-zinc-300 transition-colors"
-                >
-                  Start Video
-                </button>
+              <div className="flex items-center gap-2 px-3 py-2 text-xs text-green-400">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                Connected
               </div>
             </div>
           )}
@@ -180,10 +198,13 @@ export default function Dashboard() {
         <main className="flex-1 p-6 overflow-auto">
           {/* Tabs */}
           <div className="flex gap-1 mb-6 bg-zinc-900 rounded-xl p-1 w-fit">
-            {(["pipeline", "stream", "agents"] as const).map((tab) => (
+            {(["pipeline", "stream", "transcripts", "agents"] as const).map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => {
+                  setActiveTab(tab);
+                  if (tab === "transcripts") fetchSessions();
+                }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
                   activeTab === tab
                     ? "bg-zinc-800 text-white"
@@ -410,38 +431,23 @@ export default function Dashboard() {
                         </button>
                       </div>
 
-                      {/* Current config display */}
+                      {/* Current config summary */}
                       {!isEditing && (
-                        <div className="space-y-1.5 text-xs">
-                          <div className="flex justify-between">
-                            <span className="text-zinc-500">Model</span>
-                            <span className="text-zinc-300">
-                              {MODEL_OPTIONS.find(
-                                (m) => m.value === agent.config?.model
-                              )?.label || agent.config?.model || "Claude Opus 4.6"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-zinc-500">CLI</span>
-                            <span className="text-zinc-300">
-                              {CLI_OPTIONS.find(
-                                (c) => c.value === agent.config?.cli
-                              )?.label || "API Only"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-zinc-500">Use CLI</span>
-                            <span className="text-zinc-300">
-                              {agent.config?.use_cli ? "Yes" : "No"}
-                            </span>
-                          </div>
+                        <div className="text-xs text-zinc-400">
+                          {agent.config?.use_cli
+                            ? CLI_OPTIONS.find((c) => c.value === agent.config?.cli)?.label || "CLI"
+                            : MODEL_OPTIONS.find((m) => m.value === agent.config?.model)?.label || "Claude Opus 4.6"}
+                          <span className="text-zinc-600 ml-1">
+                            {agent.config?.use_cli ? "· CLI" : "· API"}
+                          </span>
                         </div>
                       )}
 
-                      {/* Edit config form */}
+                      {/* Edit config — iOS style */}
                       {isEditing && (
                         <AgentConfigForm
-                          config={agent.config || { model: "claude", cli: "none", use_cli: false }}
+                          agentColor={meta.color}
+                          config={agent.config || AGENT_DEFAULTS[agent.agent_type] || { model: "", cli: "claude", use_cli: true }}
                           onSave={(config) =>
                             handleSaveConfig(agent.agent_type, config)
                           }
@@ -453,95 +459,199 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+
+          {/* Transcripts Tab */}
+          {activeTab === "transcripts" && (
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Transcripts</h2>
+              <p className="text-zinc-400 mb-6">
+                Voice sessions from glasses microphone.
+              </p>
+
+              {loadingSessions ? (
+                <div className="flex items-center gap-2 text-zinc-400">
+                  <div className="w-4 h-4 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin" />
+                  Loading sessions...
+                </div>
+              ) : sessions.length === 0 ? (
+                <p className="text-zinc-500">No transcription sessions yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {sessions.map((session, i) => {
+                    const text = (session.transcription as string) || "";
+                    const createdAt = session.created_at as string;
+                    const language = (session.language as string) || "en";
+                    const durationMs = (session.duration_ms as number) || 0;
+                    const durationSec = Math.round(durationMs / 1000);
+                    const date = createdAt ? new Date(createdAt) : null;
+
+                    return (
+                      <div
+                        key={(session.session_id as string) || i}
+                        className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/50"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-zinc-500">
+                              {date ? date.toLocaleString() : "Unknown date"}
+                            </span>
+                            <span className="text-xs text-zinc-600">
+                              {durationSec > 0 ? `${durationSec}s` : ""}
+                            </span>
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500">
+                              {language}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-zinc-200 leading-relaxed">
+                          {text || <span className="text-zinc-600 italic">Empty transcription</span>}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </main>
       </div>
     </div>
   );
 }
 
+const MODEL_DETAILS: Record<string, string> = {
+  claude: "claude-opus-4-6 · 1M context · Vision + Tools",
+  gemini: "gemini-3.1-pro-preview · 2M context · Multimodal",
+  openai: "gpt-5.4 · 1M context · Function calling",
+};
+
+const CLI_DETAILS: Record<string, string> = {
+  claude: "@anthropic-ai/claude-code \u00b7 Agentic coding",
+  gemini: "@google/gemini-cli \u00b7 Google AI terminal",
+  codex: "@openai/codex \u00b7 Code generation + execution",
+};
+
+const MODEL_COLORS: Record<string, string> = {
+  claude: "bg-orange-500",
+  gemini: "bg-blue-500",
+  openai: "bg-green-500",
+};
+
 function AgentConfigForm({
+  agentColor,
   config,
   onSave,
 }: {
+  agentColor: string;
   config: AgentConfigData;
   onSave: (config: AgentConfigData) => void;
 }) {
-  const [localConfig, setLocalConfig] = useState<AgentConfigData>(config);
+  const [localConfig, setLocalConfig] = useState<AgentConfigData>(() => {
+    // Only one can be active — clean the other side
+    if (config.use_cli) {
+      return { model: "", cli: config.cli || "claude", use_cli: true };
+    }
+    return { model: config.model || "claude", cli: "none", use_cli: false };
+  });
+  const showCli = localConfig.use_cli;
 
   return (
-    <div className="space-y-3">
-      {/* Model selection */}
-      <div>
-        <label className="text-xs text-zinc-500 block mb-1">LLM Model</label>
-        <div className="flex flex-wrap gap-1.5">
-          {MODEL_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() =>
-                setLocalConfig((c) => ({ ...c, model: opt.value }))
-              }
-              className={`text-xs px-2.5 py-1 rounded-lg transition-colors ${
-                localConfig.model === opt.value
-                  ? "bg-indigo-600 text-white"
-                  : "bg-zinc-800 text-zinc-400 hover:text-white"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* CLI selection */}
-      <div>
-        <label className="text-xs text-zinc-500 block mb-1">CLI Tool</label>
-        <div className="flex flex-wrap gap-1.5">
-          {CLI_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() =>
-                setLocalConfig((c) => ({
-                  ...c,
-                  cli: opt.value,
-                  use_cli: opt.value !== "none",
-                }))
-              }
-              className={`text-xs px-2.5 py-1 rounded-lg transition-colors ${
-                localConfig.cli === opt.value
-                  ? "bg-indigo-600 text-white"
-                  : "bg-zinc-800 text-zinc-400 hover:text-white"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Use CLI toggle */}
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-zinc-500">Use CLI instead of API</span>
+    <div className="space-y-4">
+      {/* API / CLI toggle — just switches the view, doesn't select anything */}
+      <div className="flex rounded-xl overflow-hidden">
         <button
           onClick={() =>
-            setLocalConfig((c) => ({ ...c, use_cli: !c.use_cli }))
+            setLocalConfig({ model: "", cli: "none", use_cli: false })
           }
-          className={`w-10 h-5 rounded-full transition-colors relative ${
-            localConfig.use_cli ? "bg-indigo-600" : "bg-zinc-700"
+          className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
+            !showCli
+              ? "bg-indigo-600 text-white"
+              : "bg-zinc-800 text-zinc-500 hover:text-zinc-300"
           }`}
         >
-          <div
-            className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-transform ${
-              localConfig.use_cli ? "translate-x-5" : "translate-x-0.5"
-            }`}
-          />
+          API
+        </button>
+        <button
+          onClick={() =>
+            setLocalConfig({ model: "", cli: "", use_cli: true })
+          }
+          className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
+            showCli
+              ? "bg-indigo-600 text-white"
+              : "bg-zinc-800 text-zinc-500 hover:text-zinc-300"
+          }`}
+        >
+          CLI
         </button>
       </div>
 
+      {showCli ? (
+        /* CLI tool list — model is cleared */
+        <div className="space-y-2">
+          <p className="text-[10px] text-zinc-500 uppercase tracking-wider">CLI Tool</p>
+          {CLI_OPTIONS.filter((o) => o.value !== "none").map((opt) => {
+            const selected = localConfig.cli === opt.value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() =>
+                  setLocalConfig({ model: "", cli: opt.value, use_cli: true })
+                }
+                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                  selected
+                    ? "bg-indigo-500/15 border border-indigo-500/30"
+                    : "bg-zinc-800/50 border border-transparent hover:border-zinc-700"
+                }`}
+              >
+                <span className="text-indigo-400 text-sm">&#9654;</span>
+                <div className="flex-1 text-left">
+                  <p className="text-sm text-white">{opt.label}</p>
+                  <p className="text-[10px] text-zinc-500">{CLI_DETAILS[opt.value] || ""}</p>
+                </div>
+                {selected && (
+                  <span className="text-indigo-400 text-sm">&#10003;</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        /* LLM model list — cli is cleared */
+        <div className="space-y-2">
+          <p className="text-[10px] text-zinc-500 uppercase tracking-wider">LLM Model</p>
+          {MODEL_OPTIONS.map((opt) => {
+            const selected = localConfig.model === opt.value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() =>
+                  setLocalConfig({ model: opt.value, cli: "none", use_cli: false })
+                }
+                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors ${
+                  selected
+                    ? "bg-indigo-500/15 border border-indigo-500/30"
+                    : "bg-zinc-800/50 border border-transparent hover:border-zinc-700"
+                }`}
+              >
+                <div className={`w-2.5 h-2.5 rounded-full ${MODEL_COLORS[opt.value] || "bg-zinc-500"}`} />
+                <div className="flex-1 text-left">
+                  <p className="text-sm text-white">{opt.label}</p>
+                  <p className="text-[10px] text-zinc-500">{MODEL_DETAILS[opt.value] || ""}</p>
+                </div>
+                {selected && (
+                  <span className="text-indigo-400 text-sm">&#10003;</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <button
         onClick={() => onSave(localConfig)}
-        className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition-colors"
+        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-medium transition-colors"
       >
-        Save Configuration
+        Save
       </button>
     </div>
   );
